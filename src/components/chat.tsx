@@ -15,6 +15,22 @@ export default function Chat() {
             switch (part.type) {
               case 'text':
                 return <div key={`${message.id}-${i}`}>{part.text}</div>;
+              case 'tool-invocation':
+                if (part.toolInvocation.state === 'call') {
+                  // Display all args from the tool invocation
+                  return (
+                    <div key={`${message.id}-${i}`} className="text-blue-600">
+                      {Object.entries(part.toolInvocation.args).map(([key, value]) => (
+                        <div key={key}>
+                          {key}: {value}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                }
+                return null;
+              default:
+                return null;
             }
           })}
         </div>
