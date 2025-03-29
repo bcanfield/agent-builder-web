@@ -1,55 +1,46 @@
 'use server';
 
-import { prisma } from '@/lib/prisma';
-import { Tool } from '@/types/tool';
+import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { SchemaField, Tool } from '@/components/zod-schema-designer/types';
+import { prisma } from '@/lib/prisma';
 
 const toolSchema = z.object({
-  name: z.string()
-    .regex(/^[a-zA-Z0-9_-]+$/, 'Tool name can only contain letters, numbers, underscores, and hyphens')
-    .min(1, 'Tool name is required'),
-  description: z.string().min(1, 'Description is required'),
-  parameters: z.object({
-    type: z.literal('object'),
-    properties: z.record(z.object({
-      type: z.string(),
-      description: z.string(),
-      required: z.boolean().optional(),
-      enum: z.array(z.string()).optional(),
-    })),
-  }),
+  name: z.string().min(1),
+  description: z.string(),
+  parameters: z.any() as z.ZodType<SchemaField>
 });
 
-export async function createTool(tool: Omit<Tool, 'id' | 'createdAt' | 'updatedAt'>) {
+export type CreateToolInput = z.infer<typeof toolSchema>;
+
+export async function createTool(input: CreateToolInput) {
   try {
-    const validatedTool = toolSchema.parse(tool);
-    const created = prisma.tool.create({
+    const validatedInput = toolSchema.parse(input);
+    const tool = await prisma.tool.create({
       data: {
-        name: validatedTool.name,
-        description: validatedTool.description,
-        parameters: validatedTool.parameters,
-      },
+        name: validatedInput.name,
+        description: validatedInput.description,
+        parameters: validatedInput.parameters as object
+      }
     });
-    return created
+    revalidatePath('/tools');
+    return { success: true, tool };
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return {
-        error: error.errors.map(err => ({
-          field: err.path.join('.'),
-          message: err.message,
-        })),
-      };
-    }
-    throw error;
+    console.error('Error creating tool:', error);
+    return { success: false, error: 'Failed to create tool' };
   }
 }
 
 export async function getTools() {
-  return prisma.tool.findMany({
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+  try {
+    const tools = await prisma.tool.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+    return tools;
+  } catch (error) {
+    console.error('Error getting tools:', error);
+    return [];
+  }
 }
 
 export async function deleteTool(id: string) {
@@ -67,7 +58,7 @@ export async function updateTool(id: string, tool: Omit<Tool, 'id' | 'createdAt'
       data: {
         name: validatedTool.name,
         description: validatedTool.description,
-        parameters: validatedTool.parameters,
+        parameters: validatedTool.parameters as object,
       },
     });
   } catch (error) {
@@ -80,5 +71,34 @@ export async function updateTool(id: string, tool: Omit<Tool, 'id' | 'createdAt'
       };
     }
     throw error;
+  }
+}
+
+export async function saveToolSchema(toolId: string, schema: SchemaField) {
+  try {
+    await prisma.tool.update({
+      where: { id: toolId },
+      data: {
+        parameters: schema as object
+      }
+    });
+    revalidatePath('/tools');
+    return { success: true };
+  } catch (error) {
+    console.error('Error saving tool schema:', error);
+    return { success: false, error: 'Failed to save schema' };
+  }
+}
+
+export async function getToolSchema(toolId: string) {
+  try {
+    const tool = await prisma.tool.findUnique({
+      where: { id: toolId },
+      select: { parameters: true }
+    });
+    return tool?.parameters as SchemaField | null;
+  } catch (error) {
+    console.error('Error getting tool schema:', error);
+    return null;
   }
 } 

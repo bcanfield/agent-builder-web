@@ -18,13 +18,38 @@ export interface CalculatedFieldOptions {
 
 export interface SchemaField {
   name: string;
-  type: SchemaType;
+  type: string;
   description?: string;
-  children?: SchemaField[];
+  validations?: Record<string, any>;
   enumValues?: string[];
-  validations?: ValidationOptions;
-  label?: string;
-  calculatedField?: CalculatedFieldOptions;
+  children?: SchemaField[];
+  calculatedField?: {
+    dependencies: string[];
+    formula: string;
+  };
+}
+
+export interface Tool {
+  id: string;
+  name: string;
+  description: string;
+  parameters: SchemaField;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ToolSchema {
+  name: string;
+  description: string;
+  parameters: {
+    type: "object";
+    properties: Record<string, {
+      description: string;
+      type: string;
+      required?: boolean;
+      enum?: string[];
+    }>;
+  };
 }
 
 export type InitialSchema = SchemaField | z.ZodTypeAny;

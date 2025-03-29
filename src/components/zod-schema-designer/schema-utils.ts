@@ -12,6 +12,83 @@ export const getSimpleValidationView = (type: SchemaType, validations?: Validati
   return parts.join(', ')
 }
 
+export const schemaToZod = (field: SchemaField): z.ZodType => {
+  let schema: z.ZodType;
+
+  switch (field.type) {
+    case 'string':
+      schema = z.string();
+      break;
+    case 'number':
+      schema = z.coerce.number();
+      break;
+    case 'boolean':
+      schema = z.boolean();
+      break;
+    case 'date':
+      schema = z.coerce.date();
+      break;
+    case 'enum':
+      if (!field.enumValues) {
+        schema = z.string();
+      } else {
+        schema = z.enum(field.enumValues as [string, ...string[]]);
+      }
+      break;
+    case 'object':
+      if (!field.children) {
+        schema = z.record(z.any());
+      } else {
+        const shape: Record<string, z.ZodType> = {};
+        for (const child of field.children) {
+          shape[child.name] = schemaToZod(child);
+        }
+        schema = z.object(shape);
+      }
+      break;
+    case 'array':
+      if (!field.children?.[0]) {
+        schema = z.array(z.any());
+      } else {
+        schema = z.array(schemaToZod(field.children[0]));
+      }
+      break;
+    case 'union':
+      if (!field.children || field.children.length < 2) {
+        schema = z.any();
+      } else {
+        schema = z.union([schemaToZod(field.children[0]), schemaToZod(field.children[1])]);
+      }
+      break;
+    case 'file':
+    case 'calculated':
+      schema = z.any();
+      break;
+    default:
+      schema = z.any();
+  }
+
+  // Apply validations
+  if (field.validations) {
+    if (field.validations.required === false) schema = schema.optional();
+    if (field.validations.min !== undefined) schema = (schema as z.ZodNumber).min(field.validations.min);
+    if (field.validations.max !== undefined) schema = (schema as z.ZodNumber).max(field.validations.max);
+    if (field.validations.regex) schema = (schema as z.ZodString).regex(new RegExp(field.validations.regex));
+    if (field.validations.custom) schema = schema.refine(eval(field.validations.custom));
+    if (field.validations.default) {
+      const defaultValue = field.type === 'string' ? `"${field.validations.default}"` : field.validations.default;
+      schema = schema.default(eval(defaultValue));
+    }
+  }
+
+  // Apply description if present
+  if (field.description) {
+    schema = schema.describe(field.description);
+  }
+
+  return schema;
+};
+
 export const generateZodSchema = (field: SchemaField): string => {
   const generateField = (f: SchemaField): string => {
     let schema = `z.${f.type}()`;
@@ -49,11 +126,8 @@ export const generateZodSchema = (field: SchemaField): string => {
       schema = `z.function().implement((${f.calculatedField?.dependencies.join(', ')}) => ${f.calculatedField?.formula})`;
     }
 
-    if (f.label || f.description) {
-      const describeArgs = [];
-      if (f.label) describeArgs.push(`"${f.label}"`);
-      if (f.description) describeArgs.push(`"${f.description}"`);
-      schema += `.describe(${describeArgs.join(', ')})`;
+    if (f.description) {
+      schema += `.describe("${f.description}")`;
     }
 
     return schema;

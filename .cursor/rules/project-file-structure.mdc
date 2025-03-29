@@ -1,0 +1,14 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# List of notable files and directories
+
+**Prisma Schema:** `prisma/schema.prisma`
+
+**ShadCN Components:** `src/components/shadcn`
+- All shadcn components should be placed in this directory
+- Components include: button, dialog, input, label, sidebar, toast, etc.
+- Each component has its own file (e.g., `button.tsx`, `dialog.tsx`)
+- Hooks and utilities for components are also placed here (e.g., `use-toast.ts`)
