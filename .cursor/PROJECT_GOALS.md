@@ -1,0 +1,83 @@
+# Agent Builder Web Project Goals
+
+## Primary Objective
+Create a web application that wraps the Vercel AI SDK to allow users to create, configure, and compose AI agents through a user-friendly interface, with a focus on tool-based interactions and workflow automation.
+
+## Core Features
+
+### 1. Tool Management System
+- Allow users to create and manage custom tools through a web UI
+- Implement Zod validation for tool parameters to ensure:
+  - Structured output control
+  - Input validation and constraints
+  - Self-documenting tool definitions
+  - Type safety across the application
+- Support various parameter types (string, number, boolean, array, object, etc.)
+- Enable enum definitions for constrained choices
+
+### 2. Agent Configuration
+- Enable users to create agents with:
+  - Custom tool sets
+  - Specific model configurations (e.g., GPT-4)
+  - Custom prompts/instructions
+- Provide a chat interface for interacting with configured agents
+- Allow saving and loading agent configurations
+
+### 3. Workflow Management
+- Create workflows that chain multiple agents together
+- Define input/output relationships between agents
+- Support branching and conditional execution
+- Enable workflow testing and debugging
+
+### 4. Technical Architecture
+- **Frontend**:
+  - Next.js 14 with App Router
+  - TypeScript for type safety
+  - Tailwind CSS for styling
+  - React Server Components
+  - Server Actions for mutations
+  
+- **Backend**:
+  - PostgreSQL database
+  - Prisma ORM
+  - Zod for validation
+  - Vercel AI SDK integration
+
+## Implementation Phases
+
+### Phase 1: Core Tool System (Current)
+- ✅ Basic tool creation interface
+- ✅ Tool parameter management with Zod validation
+- ✅ Chat interface with tool integration
+- ✅ Database integration for tool persistence
+- Enhanced parameter builder with full Zod capabilities
+- Improved tool testing interface
+
+### Phase 2: Agent Configuration
+- Agent creation and management interface
+- Tool assignment to agents
+- Agent prompt/instruction management
+- Agent configuration persistence
+- Enhanced chat UI with better tool output rendering
+- Agent testing and debugging features
+
+### Phase 3: Workflow Automation
+- Workflow builder interface
+- Agent chaining and composition
+- Input/output mapping between agents
+- Workflow execution engine
+- Workflow testing and monitoring
+- Result visualization and export
+
+### Phase 4: AI-Assisted Agent Creation
+- AI-powered tool suggestion
+- Automated parameter schema generation
+- Smart prompt engineering assistance
+- Workflow optimization suggestions
+- Agent performance analytics
+
+## Technical Integration Notes
+- Using Vercel AI SDK's `streamText` for chat functionality
+- Using `generateObject` for structured data generation
+- Leveraging Zod schemas for both tool validation and AI output structuring
+- Implementing type-safe tool invocations in chat 
