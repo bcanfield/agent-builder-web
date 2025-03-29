@@ -22,7 +22,7 @@ export default function Chat() {
                     <div key={`${message.id}-${i}`} className="text-blue-600">
                       {Object.entries(part.toolInvocation.args).map(([key, value]) => (
                         <div key={key}>
-                          {key}: {value}
+                          {key}: {String(value)}
                         </div>
                       ))}
                     </div>
@@ -33,7 +33,7 @@ export default function Chat() {
     <div key={`${message.id}-${i}`} className="text-green-600">
       {Object.entries(part.toolInvocation.result).map(([key, value]) => (
         <div key={key}>
-          {key}: {value}
+          {key}: {String(value)}
         </div>
       ))}
     </div>

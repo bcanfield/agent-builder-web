@@ -1,8 +1,8 @@
 import { openai } from '@ai-sdk/openai';
 import { InvalidToolArgumentsError, NoSuchToolError, streamText, tool, ToolExecutionError } from 'ai';
 import { prisma } from '@/lib/prisma';
-import { SchemaField, Tool } from '@/components/zod-schema-designer/types';
-import { z } from 'zod';
+import { Tool } from '@/components/zod-schema-designer/types';
+import { dbToolToAppTool, schemaToZod } from '@/lib/schema-conversions';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -14,14 +14,7 @@ export async function POST(req: Request) {
   const dbTools = await prisma.tool.findMany();
 
   // Convert database tools to our Tool type
-  const tools: Tool[] = dbTools.map(dbTool => ({
-    id: dbTool.id,
-    name: dbTool.name,
-    description: dbTool.description,
-    parameters: dbTool.parameters as unknown as SchemaField,
-    createdAt: dbTool.createdAt,
-    updatedAt: dbTool.updatedAt,
-  }));
+  const tools: Tool[] = dbTools.map(dbToolToAppTool);
 
   // Convert tools to the format expected by the Vercel AI SDK
   const toolSet = tools.reduce((acc, dbTool) => {
@@ -56,47 +49,4 @@ export async function POST(req: Request) {
       }
     },
   });
-}
-
-function schemaToZod(schema: SchemaField): z.ZodType {
-  switch (schema.type) {
-    case 'string':
-      return z.string();
-    case 'number':
-      return z.number();
-    case 'boolean':
-      return z.boolean();
-    case 'array':
-      if (!schema.children?.[0]) {
-        return z.array(z.any());
-      }
-      return z.array(schemaToZod(schema.children[0]));
-    case 'object':
-      if (!schema.children) {
-        return z.record(z.any());
-      }
-      const shape: Record<string, z.ZodType> = {};
-      for (const child of schema.children) {
-        shape[child.name] = schemaToZod(child);
-      }
-      return z.object(shape);
-    case 'enum':
-      if (!schema.enumValues) {
-        return z.string();
-      }
-      return z.enum(schema.enumValues as [string, ...string[]]);
-    case 'union':
-      if (!schema.children || schema.children.length < 2) {
-        return z.any();
-      }
-      return z.union([schemaToZod(schema.children[0]), schemaToZod(schema.children[1])]);
-    case 'date':
-      return z.date();
-    case 'file':
-      return z.any(); // Handle file type appropriately
-    case 'calculated':
-      return z.any(); // Handle calculated type appropriately
-    default:
-      return z.any();
-  }
 }

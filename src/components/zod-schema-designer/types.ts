@@ -18,8 +18,9 @@ export interface CalculatedFieldOptions {
 
 export interface SchemaField {
   name: string;
-  type: string;
+  type: SchemaType;
   description?: string;
+  label?: string;
   validations?: Record<string, any>;
   enumValues?: string[];
   children?: SchemaField[];

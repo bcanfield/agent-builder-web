@@ -20,6 +20,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Label } from "@/components/shadcn/label"
 import { saveToolSchema, getToolSchema, createTool, getTools } from '@/app/actions/tools'
 import { toast } from 'sonner'
+import { dbToolToAppTool } from '@/lib/schema-conversions'
 
 export default function ZodSchemaShowcase() {
   const [tools, setTools] = useState<Record<string, Tool>>({});
@@ -34,8 +35,8 @@ export default function ZodSchemaShowcase() {
 
   const loadTools = async () => {
     const toolsList = await getTools();
-    const toolsMap = toolsList.reduce<Record<string, Tool>>((acc: Record<string, Tool>, tool: Tool) => {
-      acc[tool.id] = tool;
+    const toolsMap = toolsList.reduce<Record<string, Tool>>((acc, tool) => {
+      acc[tool.id] = dbToolToAppTool(tool);
       return acc;
     }, {});
     setTools(toolsMap);
@@ -78,10 +79,10 @@ export default function ZodSchemaShowcase() {
         }
       });
 
-      if (result.success) {
+      if (result.success && result.tool) {
         setTools(prev => ({
           ...prev,
-          [result.tool.id]: result.tool
+          [result.tool.id]: dbToolToAppTool(result.tool)
         }));
         setActiveTool(result.tool.id);
         setNewToolName('');
