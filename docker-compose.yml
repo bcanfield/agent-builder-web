@@ -1,0 +1,13 @@
+version: "3"
+
+services:
+  db:
+    container_name: agent-builder-db
+    image: postgres:17
+    restart: always
+    ports:
+      - 5456:5432
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: user
+      POSTGRES_DB: db
