@@ -23,14 +23,14 @@ const toolSchema = z.object({
 export async function createTool(tool: Omit<Tool, 'id' | 'createdAt' | 'updatedAt'>) {
   try {
     const validatedTool = toolSchema.parse(tool);
-    
-    return prisma.tool.create({
+    const created = prisma.tool.create({
       data: {
         name: validatedTool.name,
         description: validatedTool.description,
         parameters: validatedTool.parameters,
       },
     });
+    return created
   } catch (error) {
     if (error instanceof z.ZodError) {
       return {

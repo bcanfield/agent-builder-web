@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Tool, ToolParameter } from '@/types/tool';
 import { createTool } from '@/app/actions/tools';
+import { ParameterBuilder } from './ParameterBuilder';
 
 interface ValidationError {
   field: string;
@@ -58,6 +59,13 @@ export function ToolForm() {
     }));
   };
 
+  const handleParameterChange = (name: string, value: ToolParameter) => {
+    setParameters(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
@@ -110,45 +118,12 @@ export function ToolForm() {
         </button>
         
         {Object.entries(parameters).map(([name, param]) => (
-          <div key={name} className="mt-2 p-4 border rounded">
-            <h4 className="font-medium">{name}</h4>
-            <div className="mt-2 space-y-2">
-              <input
-                type="text"
-                value={param.description}
-                onChange={(e) => setParameters(prev => ({
-                  ...prev,
-                  [name]: { ...prev[name], description: e.target.value }
-                }))}
-                placeholder="Parameter description"
-                className="block w-full rounded-md border-gray-300 shadow-sm"
-              />
-              <select
-                value={param.type}
-                onChange={(e) => setParameters(prev => ({
-                  ...prev,
-                  [name]: { ...prev[name], type: e.target.value }
-                }))}
-                className="block w-full rounded-md border-gray-300 shadow-sm"
-              >
-                <option value="string">String</option>
-                <option value="number">Number</option>
-                <option value="boolean">Boolean</option>
-              </select>
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={param.required}
-                  onChange={(e) => setParameters(prev => ({
-                    ...prev,
-                    [name]: { ...prev[name], required: e.target.checked }
-                  }))}
-                  className="rounded border-gray-300 text-indigo-600"
-                />
-                <span className="ml-2">Required</span>
-              </label>
-            </div>
-          </div>
+          <ParameterBuilder
+            key={name}
+            name={name}
+            value={param}
+            onChange={handleParameterChange}
+          />
         ))}
       </div>
 

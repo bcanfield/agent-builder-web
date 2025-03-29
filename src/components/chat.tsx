@@ -27,7 +27,19 @@ export default function Chat() {
                       ))}
                     </div>
                   );
+                } else if (part.toolInvocation.state === 'result') {
+  // Display all results from the tool invocation
+  return (
+    <div key={`${message.id}-${i}`} className="text-green-600">
+      {Object.entries(part.toolInvocation.result).map(([key, value]) => (
+        <div key={key}>
+          {key}: {value}
+        </div>
+      ))}
+    </div>
+  );
                 }
+
                 return null;
               default:
                 return null;
