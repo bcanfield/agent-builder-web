@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "migrate": "prisma migrate dev",
+    "generate": "prisma generate"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.3.4",
